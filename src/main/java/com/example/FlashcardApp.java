@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,37 +19,115 @@ public class FlashcardApp {
             "--repetitions <num>        Number of correct repetitions required (default: 1)\n" +
             "--invertCards              Swap question and answer\n";
 
-            public static void main(String[] args) {
-                if (args.length == 0 || args[0].equals("--help")) {
-                    System.out.println(HELP_MESSAGE);
-                    return;
-                }
-            
-                String filePath = (args.length > 0 && !args[0].equals("--help")) ? args[0] : "C:\\Users\\ebo\\biedaalt\\src\\main\\java\\com\\example\\Card.txt";  //"C:\\Users\\ebo\\biedaalt\\src\\main\\java\\com\\example\\Card.txt"
-                String order = "random";
-                int repetitions = 1;
-                boolean invertCards = false;
-            
-               
-            
-                List<Card> cards = loadFlashcards(filePath);
-                if (cards == null) return;
-            
-                switch (order) {
-                    case "random":
-                        Collections.shuffle(cards);
-                        break;
-                    case "recent-mistakes-first":
-                        CardOrganizer organizer = new RecentMistakesFirstSorter();
-                        cards = organizer.sortCards(cards);
-                        break;
-                    default:
-                        System.out.println("Invalid order type: " + order);
-                        return;
-                }
-            
-                runFlashcards(cards, repetitions, invertCards);
+    static class Config {
+        String filePath;
+        String order = "random";
+        int repetitions = 1;
+        boolean invertCards;
+        boolean showHelp;
+        String errorMessage;
+    }
+
+    public static void main(String[] args) {
+        Config config = parseArgs(args);
+
+        if (config.showHelp) {
+            System.out.println(HELP_MESSAGE);
+            return;
+        }
+
+        if (config.errorMessage != null) {
+            System.out.println(config.errorMessage);
+            System.out.println(HELP_MESSAGE);
+            return;
+        }
+
+        List<Card> cards = loadFlashcards(config.filePath);
+        if (cards == null) return;
+
+        switch (config.order) {
+            case "random":
+                Collections.shuffle(cards);
+                break;
+            case "worst-first":
+                cards.sort(Comparator.comparingInt(Card::getMistakes).reversed());
+                break;
+            case "recent-mistakes-first":
+                CardOrganizer organizer = new RecentMistakesFirstSorter();
+                cards = organizer.sortCards(cards);
+                break;
+            default:
+                System.out.println("Invalid order type: " + config.order);
+                return;
+        }
+
+        runFlashcards(cards, config.repetitions, config.invertCards);
+    }
+
+    static Config parseArgs(String[] args) {
+        Config config = new Config();
+
+        for (String arg : args) {
+            if ("--help".equals(arg)) {
+                config.showHelp = true;
+                return config;
             }
+        }
+
+        if (args.length == 0 || args[0].startsWith("--")) {
+            config.errorMessage = "Missing cards file.";
+            return config;
+        }
+
+        config.filePath = args[0];
+
+        for (int i = 1; i < args.length; i++) {
+            String arg = args[i];
+            switch (arg) {
+                case "--order":
+                    if (i + 1 >= args.length) {
+                        config.errorMessage = "Missing value for --order.";
+                        return config;
+                    }
+                    config.order = args[++i];
+                    if (!isValidOrder(config.order)) {
+                        config.errorMessage = "Invalid order type: " + config.order;
+                        return config;
+                    }
+                    break;
+                case "--repetitions":
+                    if (i + 1 >= args.length) {
+                        config.errorMessage = "Missing value for --repetitions.";
+                        return config;
+                    }
+                    try {
+                        config.repetitions = Integer.parseInt(args[++i]);
+                    } catch (NumberFormatException e) {
+                        config.errorMessage = "Invalid repetitions value.";
+                        return config;
+                    }
+                    if (config.repetitions < 1) {
+                        config.errorMessage = "Repetitions must be at least 1.";
+                        return config;
+                    }
+                    break;
+                case "--invertCards":
+                    config.invertCards = true;
+                    break;
+                default:
+                    config.errorMessage = "Unknown option: " + arg;
+                    return config;
+            }
+        }
+
+        return config;
+    }
+
+    private static boolean isValidOrder(String order) {
+        return "random".equals(order)
+                || "worst-first".equals(order)
+                || "recent-mistakes-first".equals(order);
+    }
     
         // Change from private to public
     public static List<Card> loadFlashcards(String filePath){

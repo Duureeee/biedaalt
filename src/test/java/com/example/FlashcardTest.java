@@ -4,6 +4,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
 class FlashcardTest {
@@ -37,6 +40,45 @@ class FlashcardTest {
         assertEquals("Q2", sortedCards.get(0).getQuestion()); // Highest mistakes first
         assertEquals("Q3", sortedCards.get(1).getQuestion());
         assertEquals("Q1", sortedCards.get(2).getQuestion());
+    }
+
+    @Test
+    void testParseArgsWithOptions() {
+        FlashcardApp.Config config = FlashcardApp.parseArgs(new String[] {
+            "cards.txt",
+            "--order", "recent-mistakes-first",
+            "--repetitions", "3",
+            "--invertCards"
+        });
+
+        assertEquals("cards.txt", config.filePath);
+        assertEquals("recent-mistakes-first", config.order);
+        assertEquals(3, config.repetitions);
+        assertTrue(config.invertCards);
+        assertFalse(config.showHelp);
+        assertNull(config.errorMessage);
+    }
+
+    @Test
+    void testHelpOverridesOtherOptions() {
+        FlashcardApp.Config config = FlashcardApp.parseArgs(new String[] {
+            "cards.txt",
+            "--order", "worst-first",
+            "--help"
+        });
+
+        assertTrue(config.showHelp);
+        assertNull(config.errorMessage);
+    }
+
+    @Test
+    void testParseArgsRejectsInvalidOrder() {
+        FlashcardApp.Config config = FlashcardApp.parseArgs(new String[] {
+            "cards.txt",
+            "--order", "newest"
+        });
+
+        assertEquals("Invalid order type: newest", config.errorMessage);
     }
 
 }
