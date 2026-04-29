@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
 class FlashcardTest {
-    
+
     @Test
     void testCardGetters() {
         Card card = new Card("What is Java?", "A programming language", 2);
@@ -28,11 +28,8 @@ class FlashcardTest {
 
     @Test
     void testRecentMistakesFirstSorter() {
-        List<Card> cards = Arrays.asList(
-            new Card("Q1", "A1", 1),
-            new Card("Q2", "A2", 5),
-            new Card("Q3", "A3", 3)
-        );
+        List<Card> cards = Arrays.asList(new Card("Q1", "A1", 1), new Card("Q2", "A2", 5),
+                new Card("Q3", "A3", 3));
 
         RecentMistakesFirstSorter sorter = new RecentMistakesFirstSorter();
         List<Card> sortedCards = sorter.sortCards(cards);
@@ -43,13 +40,23 @@ class FlashcardTest {
     }
 
     @Test
+    void testRecentMistakesFirstSorterUsesLastMistakeFirst() {
+        Card firstWrong = new Card("Q1", "A1", 1);
+        Card lastWrong = new Card("Q2", "A2", 1);
+        firstWrong.markMistake(1);
+        lastWrong.markMistake(2);
+
+        RecentMistakesFirstSorter sorter = new RecentMistakesFirstSorter();
+        List<Card> sortedCards = sorter.sortCards(Arrays.asList(firstWrong, lastWrong));
+
+        assertEquals("Q2", sortedCards.get(0).getQuestion());
+        assertEquals("Q1", sortedCards.get(1).getQuestion());
+    }
+
+    @Test
     void testParseArgsWithOptions() {
-        FlashcardApp.Config config = FlashcardApp.parseArgs(new String[] {
-            "cards.txt",
-            "--order", "recent-mistakes-first",
-            "--repetitions", "3",
-            "--invertCards"
-        });
+        FlashcardApp.Config config = FlashcardApp.parseArgs(new String[] {"cards.txt", "--order",
+                "recent-mistakes-first", "--repetitions", "3", "--invertCards"});
 
         assertEquals("cards.txt", config.filePath);
         assertEquals("recent-mistakes-first", config.order);
@@ -61,11 +68,8 @@ class FlashcardTest {
 
     @Test
     void testHelpOverridesOtherOptions() {
-        FlashcardApp.Config config = FlashcardApp.parseArgs(new String[] {
-            "cards.txt",
-            "--order", "worst-first",
-            "--help"
-        });
+        FlashcardApp.Config config = FlashcardApp
+                .parseArgs(new String[] {"cards.txt", "--order", "worst-first", "--help"});
 
         assertTrue(config.showHelp);
         assertNull(config.errorMessage);
@@ -73,10 +77,8 @@ class FlashcardTest {
 
     @Test
     void testParseArgsRejectsInvalidOrder() {
-        FlashcardApp.Config config = FlashcardApp.parseArgs(new String[] {
-            "cards.txt",
-            "--order", "newest"
-        });
+        FlashcardApp.Config config =
+                FlashcardApp.parseArgs(new String[] {"cards.txt", "--order", "newest"});
 
         assertEquals("Invalid order type: newest", config.errorMessage);
     }

@@ -4,6 +4,7 @@ public class Card {
     private final String question;
     private final String answer;
     private int mistakes;
+    private int lastMistakeOrder;
 
     public Card(String question, String answer, int mistakes) {
         this.question = question;
@@ -23,7 +24,16 @@ public class Card {
         return mistakes;
     }
 
+    public int getLastMistakeOrder() {
+        return lastMistakeOrder;
+    }
+
     public void incrementMistakes() {
         this.mistakes++;
+    }
+
+    public void markMistake(int mistakeOrder) {
+        incrementMistakes();
+        this.lastMistakeOrder = mistakeOrder;
     }
 }
