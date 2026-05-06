@@ -61,7 +61,7 @@ public class FlashcardApp {
                 return;
         }
 
-        runFlashcards(cards, config.repetitions, config.invertCards, config.order);
+        runFlashcards(cards, config.repetitions, config.invertCards);
     }
 
     static Config parseArgs(String[] args) {
@@ -150,13 +150,11 @@ public class FlashcardApp {
         return cards;
     }
 
-    private static void runFlashcards(List<Card> cards, int repetitions, boolean invertCards,
-            String order) {
+    private static void runFlashcards(List<Card> cards, int repetitions, boolean invertCards) {
         Scanner scanner = new Scanner(System.in);
         Map<String, Integer> correctCount = new HashMap<>();
         Map<String, Integer> attemptCount = new HashMap<>();
         boolean allCorrect = true;
-        int mistakeOrder = 0;
 
         for (Card card : cards) {
             correctCount.put(card.getQuestion(), 0);
@@ -164,11 +162,6 @@ public class FlashcardApp {
         }
 
         while (true) {
-            if ("recent-mistakes-first".equals(order)) {
-                CardOrganizer organizer = new RecentMistakesFirstSorter();
-                cards = organizer.sortCards(cards);
-            }
-
             boolean allLearned = true;
             for (Card card : cards) {
                 String question = invertCards ? card.getAnswer() : card.getQuestion();
@@ -195,7 +188,6 @@ public class FlashcardApp {
                     System.out.println("Correct!");
                 } else {
                     allCorrect = false;
-                    card.markMistake(++mistakeOrder);
                     System.out.println("Wrong! Correct answer: " + answer);
                 }
             }
