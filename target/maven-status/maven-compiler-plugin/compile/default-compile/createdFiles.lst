@@ -2,3 +2,4 @@ com\example\RecentMistakesFirstSorter.class
 com\example\FlashcardApp.class
 com\example\Card.class
 com\example\CardOrganizer.class
+com\example\FlashcardApp$Config.class

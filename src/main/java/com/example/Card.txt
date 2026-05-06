@@ -1,6 +1,6 @@
-What is the capital of America?::ny::0
-What is 5 + 2?::7::2
-What is the color of sun?::white::2
-What is 3 + 2?::5::2
-Who was American first president?::gw::0
-What is the 4th color of rainbow?::Green::2
+1.What is the capital of America?::ny::0
+2.What is 5 + 2?::7::2
+3.What is the color of sun?::white::2
+4.What is 3 + 2?::5::2
+5.Who was American first president?::gw::0
+6.What is the 4th color of rainbow?::Green::2

@@ -61,7 +61,7 @@ public class FlashcardApp {
                 return;
         }
 
-        runFlashcards(cards, config.repetitions, config.invertCards);
+        runFlashcards(cards, config.repetitions, config.invertCards, config.order);
     }
 
     static Config parseArgs(String[] args) {
@@ -150,11 +150,13 @@ public class FlashcardApp {
         return cards;
     }
 
-    private static void runFlashcards(List<Card> cards, int repetitions, boolean invertCards) {
+    private static void runFlashcards(List<Card> cards, int repetitions, boolean invertCards,
+            String order) {
         Scanner scanner = new Scanner(System.in);
         Map<String, Integer> correctCount = new HashMap<>();
         Map<String, Integer> attemptCount = new HashMap<>();
         boolean allCorrect = true;
+        int mistakeOrder = 0;
 
         for (Card card : cards) {
             correctCount.put(card.getQuestion(), 0);
@@ -164,13 +166,14 @@ public class FlashcardApp {
         while (true) {
             boolean allLearned = true;
             for (Card card : cards) {
+                if (correctCount.get(card.getQuestion()) >= repetitions)
+                    continue;
+
                 String question = invertCards ? card.getAnswer() : card.getQuestion();
                 String answer = invertCards ? card.getQuestion() : card.getAnswer();
 
                 attemptCount.put(card.getQuestion(), attemptCount.get(card.getQuestion()) + 1);
 
-                if (correctCount.get(card.getQuestion()) >= repetitions)
-                    continue;
                 allLearned = false;
 
                 System.out.println("Question: " + question);
@@ -188,11 +191,16 @@ public class FlashcardApp {
                     System.out.println("Correct!");
                 } else {
                     allCorrect = false;
+                    card.markMistake(++mistakeOrder);
                     System.out.println("Wrong! Correct answer: " + answer);
                 }
             }
             if (allLearned)
                 break; // If all cards are learned, exit the loop.
+            if ("recent-mistakes-first".equals(order)) {
+                CardOrganizer organizer = new RecentMistakesFirstSorter();
+                cards = organizer.sortCards(cards);
+            }
         }
 
         System.out.println("All cards learned!");
